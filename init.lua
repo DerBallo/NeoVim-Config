@@ -33,7 +33,7 @@ vim.pack.add({
 })
 
 require("nvim-treesitter.configs").setup({
-    ensure_installed = { "cpp", "lua", "cmake", "glsl" },
+    ensure_installed = { "cpp", "lua", "cmake", "glsl", "python" },
     highlight = { enable = true }
 })
 require('telescope').setup {
@@ -48,16 +48,30 @@ require('telescope').setup {
 }
 require('telescope').load_extension('fzf')
 require('blink.cmp').setup({
+    completion = {
+        accept = {
+            auto_brackets = {
+                enabled = true
+            },
+        },
+        list = {
+            selection = {
+                preselect = true,
+                auto_insert = false
+            }
+        },
+    },
     keymap = {
-        ['<C-space>'] = { 'show', 'show_documentation' },
+        ['<C-space>'] = { 'show', 'show_documentation', 'fallback' },
         ['<Tab>'] = { 'select_and_accept', 'fallback' },
-        ['<Up>'] = { 'select_prev', 'fallback' },
+        ['<Up>'] = { 'select_prev', 'fallback'},
         ['<Down>'] = { 'select_next', 'fallback' },
-        ['<C-Up>'] = { 'scroll_documentation_up', 'fallback' },
-        ['<C-Down>'] = { 'scroll_documentation_down', 'fallback' },
-        ['<S-Up>'] = { 'snippet_forward', 'fallback' },
-        ['<S-Down>'] = { 'snippet_backward', 'fallback' },
-        ['<C-k>'] = { 'show_signature', 'hide_signature', 'fallback' },
+        ['<Esc>'] = { 'hide', 'fallback' },
+        --['<C-Up>'] = { 'scroll_documentation_up' },
+        --['<C-Down>'] = { 'scroll_documentation_down' },
+        --['<S-Up>'] = { 'snippet_forward' },
+        --['<S-Down>'] = { 'snippet_backward' },
+        --['<C-k>'] = { 'show_signature', 'hide_signature' },
     },
     appearance = {
         nerd_font_variant = 'mono',
@@ -102,7 +116,7 @@ require('blink.cmp').setup({
                 module = "blink.cmp.sources.path",
                 score_offset = 10000,
                 fallbacks = { "snippets", "buffer" },
-                min_keyword_length = 1,
+                min_keyword_length = 0,
                 opts = {
                     trailing_slash = false,
                     label_trailing_slash = true,
@@ -143,7 +157,7 @@ vim.lsp.config('*', {
     capabilities = require('blink.cmp').get_lsp_capabilities(),
 })
 
-vim.lsp.enable({ "clangd", "lua_ls", "cmake", --[["glsl_analyzer"]] })
+vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright" --[["glsl_analyzer"]] })
 
 vim.g.mapleader = " "
 
@@ -165,6 +179,7 @@ end)
 vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>')
 vim.keymap.set("n", "K", "")
 vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover)
+--vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
 vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols, { desc = "Find Symbols" })
 vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers" })
 vim.keymap.set("n", "<leader>s", function()

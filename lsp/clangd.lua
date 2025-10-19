@@ -72,6 +72,10 @@ return {
     "--clang-tidy",
     "--completion-style=detailed",
     "--header-insertion=iwyu",
+    "--all-scopes-completion",
+    "--function-arg-placeholders",
+    "--pretty",
+    "--limit-diagnostics=256",
   },
   filetypes = { "c", "cpp", "h", "hpp", "objc", "objcpp", "cuda" },
   root_markers = {

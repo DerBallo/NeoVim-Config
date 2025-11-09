@@ -1,0 +1,28 @@
+{
+  "plugins": {
+    "blink.cmp": {
+      "rev": "8743384",
+      "src": "https://github.com/Saghen/blink.cmp"
+    },
+    "nvim-treesitter": {
+      "rev": "42fc28ba",
+      "src": "https://github.com/nvim-treesitter/nvim-treesitter"
+    },
+    "plenary.nvim": {
+      "rev": "b9fd522",
+      "src": "https://github.com/nvim-lua/plenary.nvim"
+    },
+    "telescope-fzf-native.nvim": {
+      "rev": "1f08ed6",
+      "src": "https://github.com/nvim-telescope/telescope-fzf-native.nvim"
+    },
+    "telescope.nvim": {
+      "rev": "b4da76b",
+      "src": "https://github.com/nvim-telescope/telescope.nvim"
+    },
+    "vscode.nvim": {
+      "rev": "cb9df08",
+      "src": "https://github.com/Mofiqul/vscode.nvim"
+    }
+  }
+}

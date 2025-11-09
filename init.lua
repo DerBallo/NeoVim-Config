@@ -192,7 +192,7 @@ vim.keymap.set("n", "<leader>b", function()
     vim.fn.jobstart(
         {
             "xfce4-terminal", "-e",
-            "bash -c 'cmake -S ~/Dev/DVL -B ~/Dev/DVL/build; cmake --build ~/Dev/DVL/build --verbose -- -j$(nproc); ~/Dev/DVL/build/DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
+            "bash -c 'ulimit -c unlimited; cd ~/Dev/DVL/build; rm -f ./core.*; cmake -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
         },
         { detach = true }
     )

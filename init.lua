@@ -22,6 +22,14 @@ vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 vim.opt.colorcolumn = ""
 vim.opt.winborder = "rounded"
+vim.g.netrw_liststyle = 4
+
+vim.opt.list = true
+
+vim.opt.listchars = {
+    tab = "»·",
+    space = "·",
+}
 
 vim.pack.add({
     { src = "https://github.com/Mofiqul/vscode.nvim" },
@@ -36,6 +44,7 @@ require("nvim-treesitter.configs").setup({
     ensure_installed = { "cpp", "lua", "cmake", "glsl", "python" },
     highlight = { enable = true }
 })
+
 require('telescope').setup {
     extensions = {
         fzf = {
@@ -46,7 +55,9 @@ require('telescope').setup {
         }
     }
 }
+
 require('telescope').load_extension('fzf')
+
 require('blink.cmp').setup({
     completion = {
         accept = {
@@ -64,7 +75,7 @@ require('blink.cmp').setup({
     keymap = {
         ['<C-space>'] = { 'show', 'show_documentation', 'fallback' },
         ['<Tab>'] = { 'select_and_accept', 'fallback' },
-        ['<Up>'] = { 'select_prev', 'fallback'},
+        ['<Up>'] = { 'select_prev', 'fallback' },
         ['<Down>'] = { 'select_next', 'fallback' },
         ['<Esc>'] = { 'hide', 'fallback' },
         --['<C-Up>'] = { 'scroll_documentation_up' },
@@ -161,10 +172,14 @@ vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright" --[["glsl_analyzer"]] })
 
 vim.g.mapleader = " "
 
-vim.keymap.set("n", "<leader>e", ":Ex<CR>")
-vim.keymap.set("n", "<leader>w", ":write<CR>")
-vim.keymap.set("n", "<leader>q", ":quit<CR>")
-vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>")
+vim.keymap.set("n", "<Esc>", "a", { noremap = true })
+vim.keymap.set("n", "K", "", { noremap = true })
+vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { noremap = true })
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true })
 vim.keymap.set("n", "<leader>f", function()
     local filetypes = { c = true, cpp = true, h = true, hpp = true, objc = true, objcpp = true, cuda = true, }
     local ft = vim.bo.filetype
@@ -175,35 +190,58 @@ vim.keymap.set("n", "<leader>f", function()
     else
         vim.lsp.buf.format({ async = true })
     end
-end)
-vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>')
-vim.keymap.set("n", "K", "")
-vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover)
+end, { noremap = true })
+vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
 --vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
-vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols, { desc = "Find Symbols" })
-vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers" })
+vim.keymap.set("n", "<leader>+", vim.lsp.buf.code_action, { noremap = true })
+vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols,
+    { desc = "Find Symbols", noremap = true })
+vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
 vim.keymap.set("n", "<leader>s", function()
     require("telescope.builtin").find_files({
         hidden = true,
         --no_ignore = true,
     })
-end, { desc = "Search Files" })
-vim.keymap.set("n", "<leader>b", function()
+end, { desc = "Search Files", noremap = true })
+vim.keymap.set("n", "<leader>cd", function()
     vim.fn.jobstart(
         {
             "xfce4-terminal", "-e",
-            "bash -c 'ulimit -c unlimited; cd ~/Dev/DVL/build; rm -f ./core.*; cmake -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
+            "bash -c 'ulimit -c unlimited; cd ~/Dev/DVL/build_debug; rm -f /tmp/core.*; cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG=\"-g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Wpedantic\" -DCMAKE_EXE_LINKER_FLAGS_DEBUG=\"-rdynamic\" -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
         },
         { detach = true }
     )
 end, { noremap = true })
-vim.keymap.set('n', '<leader>d', require('telescope.builtin').diagnostics, {})
+vim.keymap.set("n", "<leader>cr", function()
+    vim.fn.jobstart(
+        {
+            "xfce4-terminal", "-e",
+            "bash -c 'cd ~/Dev/DVL/build_release; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O3 -march=native -mtune=native -DNDEBUG -flto -fno-omit-frame-pointer\" -DCMAKE_EXE_LINKER_FLAGS_RELEASE=\"-s -flto\" -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
+        },
+        { detach = true }
+    )
+end, { noremap = true })
+vim.keymap.set("n", "<leader>c", function()
+    vim.fn.jobstart(
+        {
+            "xfce4-terminal", "-e",
+            "bash -c 'cd /tmp; core_file=$(ls -t core* 2>/dev/null | head -n 1); if [ -z \"$core_file\" ]; then " ..
+            "echo \"No core file found\"; echo; read -n 1 -s -r -p \"Press any key to close...\"; " ..
+            "else " ..
+            "gdb ./DVL \"$core_file\"; fi'"
+        },
+        { detach = true }
+    )
+end, { noremap = true })
+vim.keymap.set('n', '<leader>d', require('telescope.builtin').diagnostics, { noremap = true })
 vim.keymap.set('n', '<CR>', function()
     require('telescope.builtin').lsp_references({
         include_declaration = true,
     })
-end, { buffer = bufnr, silent = true })
-vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float)
+end, { buffer = bufnr, silent = true, noremap = true })
+vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 
 vim.cmd("colorscheme vscode")
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })

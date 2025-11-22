@@ -76,7 +76,7 @@ return {
     "--function-arg-placeholders",
     "--pretty",
   },
-  filetypes = { "c", "cpp", "h", "hpp", "objc", "objcpp", "cuda" },
+  filetypes = { "c", "cxx", "cpp", "h", "hpp", "hxx", "tpp", "ipp", "inl", "inc", "def", "objc", "objcpp", "cuda" },
   root_markers = {
     '.clangd',
     '.clang-tidy',

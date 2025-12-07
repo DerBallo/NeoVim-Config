@@ -23,6 +23,7 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = ""
 vim.opt.winborder = "rounded"
 vim.g.netrw_liststyle = 4
+vim.opt.virtualedit = "all"
 
 vim.opt.list = true
 
@@ -43,6 +44,16 @@ vim.pack.add({
 require("nvim-treesitter.configs").setup({
     ensure_installed = { "cpp", "lua", "cmake", "glsl", "python" },
     highlight = { enable = true }
+})
+vim.filetype.add({
+    extension = {
+        hxx = "cpp",
+        ipp = "cpp",
+        tpp = "cpp",
+        inl = "cpp",
+        inc = "cpp",
+        def = "cpp",
+    },
 })
 
 require('telescope').setup {
@@ -206,34 +217,13 @@ vim.keymap.set("n", "<leader>s", function()
     })
 end, { desc = "Search Files", noremap = true })
 vim.keymap.set("n", "<leader>cd", function()
-    vim.fn.jobstart(
-        {
-            "xfce4-terminal", "-e",
-            "bash -c 'ulimit -c unlimited; cd ~/Dev/DVL/build_debug; rm -f /tmp/core.*; cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG=\"-g3 -O0 -fno-omit-frame-pointer -Wall -Wextra -Wpedantic\" -DCMAKE_EXE_LINKER_FLAGS_DEBUG=\"-rdynamic\" -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
-        },
-        { detach = true }
-    )
+    vim.cmd("terminal ./build.sh debug")
 end, { noremap = true })
 vim.keymap.set("n", "<leader>cr", function()
-    vim.fn.jobstart(
-        {
-            "xfce4-terminal", "-e",
-            "bash -c 'cd ~/Dev/DVL/build_release; cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE=\"-O3 -march=native -mtune=native -DNDEBUG -flto -fno-omit-frame-pointer\" -DCMAKE_EXE_LINKER_FLAGS_RELEASE=\"-s -flto\" -S .. -B .; cmake --build . --verbose -- -j$(nproc); ./DVL; echo; echo \"Press any key to close...\"; read -n 1 -s'",
-        },
-        { detach = true }
-    )
+    vim.cmd("terminal ./build.sh release")
 end, { noremap = true })
 vim.keymap.set("n", "<leader>c", function()
-    vim.fn.jobstart(
-        {
-            "xfce4-terminal", "-e",
-            "bash -c 'cd /tmp; core_file=$(ls -t core* 2>/dev/null | head -n 1); if [ -z \"$core_file\" ]; then " ..
-            "echo \"No core file found\"; echo; read -n 1 -s -r -p \"Press any key to close...\"; " ..
-            "else " ..
-            "gdb ./DVL \"$core_file\"; fi'"
-        },
-        { detach = true }
-    )
+    vim.cmd("terminal ./build.sh core")
 end, { noremap = true })
 vim.keymap.set('n', '<leader>d', require('telescope.builtin').diagnostics, { noremap = true })
 vim.keymap.set('n', '<CR>', function()

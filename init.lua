@@ -196,17 +196,7 @@ vim.keymap.set("n", "<leader>i", function()
     local enabled = vim.lsp.inlay_hint.is_enabled()
     vim.lsp.inlay_hint.enable(not enabled)
 end, { noremap = true })
-vim.keymap.set("n", "<leader>f", function()
-    local filetypes = { c = true, cpp = true, h = true, hpp = true, objc = true, objcpp = true, cuda = true, }
-    local ft = vim.bo.filetype
-    if filetypes[ft] then
-        vim.cmd("write")
-        vim.cmd("!clang-format -i %")
-        vim.cmd("edit")
-    else
-        vim.lsp.buf.format({ async = true })
-    end
-end, { noremap = true })
+vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { noremap = true })
 vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
 vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
 --vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
@@ -215,19 +205,19 @@ vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbo
     { desc = "Find Symbols", noremap = true })
 vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
 vim.keymap.set("n", "<leader>z", function()
-  if vim.bo.buftype ~= "terminal" then
-    return
-  end
-  local cur = vim.api.nvim_get_current_buf()
-  local prev = vim.fn.bufnr("#")
-  if prev > 0 and vim.api.nvim_buf_is_loaded(prev) then
-    vim.cmd("buffer " .. prev)
-  else
-    vim.cmd("bprevious")
-  end
-  if cur ~= vim.api.nvim_get_current_buf() then
-    vim.cmd("bdelete! " .. cur)
-  end
+    if vim.bo.buftype ~= "terminal" then
+        return
+    end
+    local cur = vim.api.nvim_get_current_buf()
+    local prev = vim.fn.bufnr("#")
+    if prev > 0 and vim.api.nvim_buf_is_loaded(prev) then
+        vim.cmd("buffer " .. prev)
+    else
+        vim.cmd("bprevious")
+    end
+    if cur ~= vim.api.nvim_get_current_buf() then
+        vim.cmd("bdelete! " .. cur)
+    end
 end)
 vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
 vim.keymap.set("n", "<leader>s", function()

@@ -184,13 +184,18 @@ vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright" --[["glsl_analyzer"]] })
 vim.g.mapleader = " "
 
 vim.keymap.set("n", "<Esc>", "a", { noremap = true })
-vim.keymap.set("n", "K", "", { noremap = true })
+vim.keymap.set({ "n", "v" }, "<Up>", "gk", { noremap = true })
+vim.keymap.set({ "n", "v" }, "<Down>", "gj", { noremap = true })
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
 vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
 vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
 vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
 vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { noremap = true })
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true })
+vim.keymap.set("n", "<leader>i", function()
+    local enabled = vim.lsp.inlay_hint.is_enabled()
+    vim.lsp.inlay_hint.enable(not enabled)
+end, { noremap = true })
 vim.keymap.set("n", "<leader>f", function()
     local filetypes = { c = true, cpp = true, h = true, hpp = true, objc = true, objcpp = true, cuda = true, }
     local ft = vim.bo.filetype
@@ -209,6 +214,21 @@ vim.keymap.set("n", "<leader>+", vim.lsp.buf.code_action, { noremap = true })
 vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols,
     { desc = "Find Symbols", noremap = true })
 vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+vim.keymap.set("n", "<leader>z", function()
+  if vim.bo.buftype ~= "terminal" then
+    return
+  end
+  local cur = vim.api.nvim_get_current_buf()
+  local prev = vim.fn.bufnr("#")
+  if prev > 0 and vim.api.nvim_buf_is_loaded(prev) then
+    vim.cmd("buffer " .. prev)
+  else
+    vim.cmd("bprevious")
+  end
+  if cur ~= vim.api.nvim_get_current_buf() then
+    vim.cmd("bdelete! " .. cur)
+  end
+end)
 vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
 vim.keymap.set("n", "<leader>s", function()
     require("telescope.builtin").find_files({

@@ -23,6 +23,7 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = ""
 vim.opt.winborder = "rounded"
 vim.g.netrw_liststyle = 4
+vim.g.netrw_sort_sequence = [[[/]$,*,\(\.bak\|\~\|\.o\|\.h\|\.hpp\|\.c\|\.cpp\|\.info\|\.swp\|\.obj\)[*@]\=$]]
 vim.opt.virtualedit = "all"
 
 vim.opt.list = true
@@ -42,7 +43,7 @@ vim.pack.add({
 })
 
 require("nvim-treesitter.configs").setup({
-    ensure_installed = { "cpp", "lua", "cmake", "glsl", "python" },
+    ensure_installed = { "cpp", "lua", "cmake", "glsl", "python", "json", "css", "html", "markdown", "slang" },
     highlight = { enable = true }
 })
 vim.filetype.add({
@@ -151,10 +152,10 @@ require('blink.cmp').setup({
             buffer = {
                 name = "Buffer",
                 enabled = true,
-                max_items = 3,
+                max_items = 8,
                 module = "blink.cmp.sources.buffer",
-                min_keyword_length = 2,
-                score_offset = 20,
+                min_keyword_length = 1,
+                score_offset = 30,
             },
             snippets = {
                 name = "snippets",
@@ -162,7 +163,7 @@ require('blink.cmp').setup({
                 max_items = 15,
                 min_keyword_length = 2,
                 module = "blink.cmp.sources.snippets",
-                score_offset = 30,
+                score_offset = 20,
             },
             vimtex = {
                 name = "vimtex",
@@ -179,7 +180,7 @@ vim.lsp.config('*', {
     capabilities = require('blink.cmp').get_lsp_capabilities(),
 })
 
-vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright" --[["glsl_analyzer"]] })
+vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright", "jsonls", "cssls", "html", "slangd" --[["glsl_analyzer"]] })
 
 vim.g.mapleader = " "
 

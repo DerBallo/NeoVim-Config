@@ -76,6 +76,7 @@ return {
         "--function-arg-placeholders",
         "--pretty",
         "--inlay-hints",
+        "--header-insertion=never",
     },
     filetypes = { "c", "cxx", "cpp", "h", "hpp", "hxx", "tpp", "ipp", "inl", "inc", "def", "objc", "objcpp", "cuda" },
     root_markers = {

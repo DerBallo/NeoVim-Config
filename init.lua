@@ -39,13 +39,13 @@ vim.pack.add({
     { src = "https://github.com/nvim-lua/plenary.nvim" },
     { src = "https://github.com/nvim-telescope/telescope.nvim",            dependencies = { 'nvim-lua/plenary.nvim' } },
     { src = "https://github.com/nvim-telescope/telescope-fzf-native.nvim", build = 'make' },
-    { src = "https://github.com/Saghen/blink.cmp",                         build = 'cargo build --release' },
 })
 
 require("nvim-treesitter.configs").setup({
     ensure_installed = { "cpp", "lua", "cmake", "glsl", "python", "json", "css", "html", "markdown", "slang" },
     highlight = { enable = true }
 })
+
 vim.filetype.add({
     extension = {
         hxx = "cpp",
@@ -57,7 +57,7 @@ vim.filetype.add({
     },
 })
 
-require('telescope').setup {
+require('telescope').setup({
     extensions = {
         fzf = {
             fuzzy = true,
@@ -66,145 +66,75 @@ require('telescope').setup {
             case_mode = "smart_case",
         }
     }
-}
+})
 
 require('telescope').load_extension('fzf')
 
-require('blink.cmp').setup({
-    completion = {
-        accept = {
-            auto_brackets = {
-                enabled = true
-            },
-        },
-        list = {
-            selection = {
-                preselect = true,
-                auto_insert = false
-            }
-        },
-    },
-    keymap = {
-        ['<C-space>'] = { 'show', 'show_documentation', 'fallback' },
-        ['<Tab>'] = { 'select_and_accept', 'fallback' },
-        ['<Up>'] = { 'select_prev', 'fallback' },
-        ['<Down>'] = { 'select_next', 'fallback' },
-        ['<Esc>'] = { 'hide', 'fallback' },
-        --['<C-Up>'] = { 'scroll_documentation_up' },
-        --['<C-Down>'] = { 'scroll_documentation_down' },
-        --['<S-Up>'] = { 'snippet_forward' },
-        --['<S-Down>'] = { 'snippet_backward' },
-        --['<C-k>'] = { 'show_signature', 'hide_signature' },
-    },
-    appearance = {
-        nerd_font_variant = 'mono',
-    },
-    sources = {
-        default = { 'lsp', 'path', 'snippets', 'buffer' },
-        providers = {
-            lsp = {
-                name = "lsp",
-                enabled = true,
-                module = "blink.cmp.sources.lsp",
-                min_keyword_length = 0,
-                score_offset = 50,
-                opts = {
-                    transform_items = function(items)
-                        local function sanitize(val)
-                            if val == vim.NIL then
-                                return nil
-                            elseif type(val) == "userdata" then
-                                return tostring(val)
-                            elseif type(val) == "table" then
-                                local clean = {}
-                                for k, v in pairs(val) do
-                                    clean[k] = sanitize(v)
-                                end
-                                return clean
-                            else
-                                return val
-                            end
-                        end
-
-                        for i, item in ipairs(items) do
-                            items[i] = sanitize(item)
-                        end
-
-                        return items
-                    end,
-                },
-            },
-            path = {
-                name = "Path",
-                module = "blink.cmp.sources.path",
-                score_offset = 10000,
-                fallbacks = { "snippets", "buffer" },
-                min_keyword_length = 0,
-                opts = {
-                    trailing_slash = false,
-                    label_trailing_slash = true,
-                    get_cwd = function(context)
-                        return vim.fn.expand(("#%d:p:h"):format(context.bufnr))
-                    end,
-                    show_hidden_files_by_default = true,
-                },
-            },
-            buffer = {
-                name = "Buffer",
-                enabled = true,
-                max_items = 8,
-                module = "blink.cmp.sources.buffer",
-                min_keyword_length = 1,
-                score_offset = 30,
-            },
-            snippets = {
-                name = "snippets",
-                enabled = true,
-                max_items = 15,
-                min_keyword_length = 2,
-                module = "blink.cmp.sources.snippets",
-                score_offset = 20,
-            },
-            vimtex = {
-                name = "vimtex",
-                min_keyword_length = 2,
-                module = "blink.compat.source",
-                score_offset = 25,
-            },
-        },
-    },
-    fuzzy = { implementation = "prefer_rust_with_warning" },
+vim.lsp.enable({
+    "clangd",
+    "lua_ls",
+    "cmake",
+    "pyright",
+    "jsonls",
+    "cssls",
+    "html",
+    "slangd",
+    "glsl_analyzer"
 })
 
-vim.lsp.config('*', {
-    capabilities = require('blink.cmp').get_lsp_capabilities(),
-})
 
-vim.lsp.enable({ "clangd", "lua_ls", "cmake", "pyright", "jsonls", "cssls", "html", "slangd" --[["glsl_analyzer"]] })
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
+
+vim.lsp.config("*", {
+    on_attach = function(client, bufnr)
+        if client:supports_method("textDocument/completion") then
+            vim.lsp.completion.enable({
+                bufnr = bufnr,
+                client_id = client.id,
+            })
+        end
+    end,
+})
 
 vim.g.mapleader = " "
 
 vim.keymap.set("n", "<Esc>", "a", { noremap = true })
+
 vim.keymap.set({ "n", "v" }, "<Up>", "gk", { noremap = true })
+
 vim.keymap.set({ "n", "v" }, "<Down>", "gj", { noremap = true })
+
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
+
 vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
+
 vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
+
 vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
-vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { noremap = true })
+
+--vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { noremap = true })
+
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true })
+
 vim.keymap.set("n", "<leader>i", function()
     local enabled = vim.lsp.inlay_hint.is_enabled()
     vim.lsp.inlay_hint.enable(not enabled)
 end, { noremap = true })
+
 vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { noremap = true })
+
 vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+
 vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
+
 --vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
 vim.keymap.set("n", "<leader>+", vim.lsp.buf.code_action, { noremap = true })
+
 vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols,
     { desc = "Find Symbols", noremap = true })
+
 vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+
 vim.keymap.set("n", "<leader>z", function()
     if vim.bo.buftype ~= "terminal" then
         return
@@ -220,28 +150,36 @@ vim.keymap.set("n", "<leader>z", function()
         vim.cmd("bdelete! " .. cur)
     end
 end)
+
 vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
+
 vim.keymap.set("n", "<leader>s", function()
     require("telescope.builtin").find_files({
         hidden = true,
         --no_ignore = true,
     })
 end, { desc = "Search Files", noremap = true })
-vim.keymap.set("n", "<leader>cd", function()
-    vim.cmd("terminal ./build.sh debug")
+
+vim.keymap.set("n", "<leader>d", function()
+    vim.cmd("terminal ./build_debug.sh")
 end, { noremap = true })
-vim.keymap.set("n", "<leader>cr", function()
-    vim.cmd("terminal ./build.sh release")
+
+vim.keymap.set("n", "<leader>r", function()
+    vim.cmd("terminal ./build_release.sh")
 end, { noremap = true })
+
 vim.keymap.set("n", "<leader>c", function()
-    vim.cmd("terminal ./build.sh core")
+    vim.cmd("terminal ./debug_core_file.sh")
 end, { noremap = true })
-vim.keymap.set('n', '<leader>d', require('telescope.builtin').diagnostics, { noremap = true })
+
+vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { noremap = true })
+
 vim.keymap.set('n', '<CR>', function()
     require('telescope.builtin').lsp_references({
         include_declaration = true,
     })
 end, { buffer = bufnr, silent = true, noremap = true })
+
 vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 
 vim.cmd("colorscheme vscode")

@@ -37,13 +37,29 @@ vim.pack.add({
     { src = "https://github.com/Mofiqul/vscode.nvim" },
     { src = "https://github.com/nvim-treesitter/nvim-treesitter" },
     { src = "https://github.com/nvim-lua/plenary.nvim" },
-    { src = "https://github.com/nvim-telescope/telescope.nvim",            dependencies = { 'nvim-lua/plenary.nvim' } },
-    { src = "https://github.com/nvim-telescope/telescope-fzf-native.nvim", build = 'make' },
+    { src = "https://github.com/nvim-telescope/telescope.nvim" },
+    { src = "https://github.com/nvim-telescope/telescope-fzf-native.nvim" }, --requires manually running make in plugin directory
+    { src = "https://github.com/hrsh7th/nvim-cmp" },
+    { src = "https://github.com/hrsh7th/cmp-nvim-lsp" },
+    { src = "https://github.com/hrsh7th/cmp-buffer" },
+    { src = "https://github.com/hrsh7th/cmp-path" },
+    { src = "https://github.com/L3MON4D3/LuaSnip" },
+    { src = "https://github.com/HiPhish/rainbow-delimiters.nvim" },
 })
 
-require("nvim-treesitter.configs").setup({
-    ensure_installed = { "cpp", "lua", "cmake", "glsl", "python", "json", "css", "html", "markdown", "slang" },
-    highlight = { enable = true }
+local treesitter_filetypes = {
+    "cpp", "c", "lua", "python", "json", "css", "html", "markdown", "cmake", "glsl", "slang"
+}
+
+require("nvim-treesitter").setup({})
+
+require("nvim-treesitter").install(treesitter_filetypes)
+
+vim.api.nvim_create_autocmd("FileType", {
+    pattern = treesitter_filetypes,
+    callback = function()
+        vim.treesitter.start()
+    end,
 })
 
 vim.filetype.add({
@@ -56,6 +72,17 @@ vim.filetype.add({
         def = "cpp",
     },
 })
+
+local rainbow_delimiters = require 'rainbow-delimiters'
+
+vim.g.rainbow_delimiters = {
+    strategy = {
+        [''] = rainbow_delimiters.strategy['global'],
+    },
+    query = {
+        [''] = 'rainbow-delimiters',
+    },
+}
 
 require('telescope').setup({
     extensions = {
@@ -82,18 +109,20 @@ vim.lsp.enable({
     "glsl_analyzer"
 })
 
+local cmp = require("cmp")
+cmp.setup({
+    mapping = cmp.mapping.preset.insert({
+        ["<C-Space>"] = cmp.mapping.complete(),
+        ["<Tab>"] = cmp.mapping.confirm({ select = true }),
+        ["<Down>"] = cmp.mapping.select_next_item(),
+        ["<Up>"] = cmp.mapping.select_prev_item(),
+    }),
 
-vim.opt.completeopt = { "menu", "menuone", "noselect" }
-
-vim.lsp.config("*", {
-    on_attach = function(client, bufnr)
-        if client:supports_method("textDocument/completion") then
-            vim.lsp.completion.enable({
-                bufnr = bufnr,
-                client_id = client.id,
-            })
-        end
-    end,
+    sources = {
+        { name = "nvim_lsp" },
+        { name = "buffer" },
+        { name = "path" },
+    },
 })
 
 vim.g.mapleader = " "

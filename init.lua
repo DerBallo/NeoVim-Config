@@ -29,7 +29,7 @@ vim.opt.virtualedit = "all"
 vim.opt.list = true
 
 vim.opt.listchars = {
-    tab = "»·",
+    tab = "|-",
     space = "·",
 }
 
@@ -45,6 +45,7 @@ vim.pack.add({
     { src = "https://github.com/hrsh7th/cmp-path" },
     { src = "https://github.com/L3MON4D3/LuaSnip" },
     { src = "https://github.com/HiPhish/rainbow-delimiters.nvim" },
+    { src = "https://github.com/lukas-reineke/indent-blankline.nvim" },
 })
 
 local treesitter_filetypes = {
@@ -83,6 +84,15 @@ vim.g.rainbow_delimiters = {
         [''] = 'rainbow-delimiters',
     },
 }
+
+require("ibl").setup({
+    indent = {
+        char = "┆",
+    },
+    scope = {
+        enabled = true,
+    },
+})
 
 require('telescope').setup({
     extensions = {

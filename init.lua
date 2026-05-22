@@ -143,6 +143,12 @@ vim.keymap.set({ "n", "v" }, "<Up>", "gk", { noremap = true })
 
 vim.keymap.set({ "n", "v" }, "<Down>", "gj", { noremap = true })
 
+vim.keymap.set("n", "<A-Up>", ":m .-2<CR>==", { noremap = true, silent = true })
+vim.keymap.set("n", "<A-Down>", ":m .+1<CR>==", { noremap = true, silent = true })
+
+vim.keymap.set("v", "<A-Up>", ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
+vim.keymap.set("v", "<A-Down>", ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
+
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
 
 vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
@@ -210,6 +216,22 @@ end, { noremap = true })
 vim.keymap.set("n", "<leader>c", function()
     vim.cmd("terminal ./debug_core_file.sh")
 end, { noremap = true })
+
+vim.keymap.set("n", "<leader>lll", function()
+    local path = vim.fn.getcwd() .. "/LICENSE.md"
+    local lines = vim.fn.readfile(path)
+    if vim.v.shell_error ~= 0 or #lines == 0 then
+        vim.notify("Could not read LICENCE.md", vim.log.levels.ERROR)
+        return
+    end
+    local output = {}
+    table.insert(output, "/*")
+    for _, line in ipairs(lines) do
+        table.insert(output, " * " .. line)
+    end
+    table.insert(output, " */")
+    vim.api.nvim_put(output, "c", false, true)
+end, { noremap = true, silent = true, desc = "Paste custom text" })
 
 vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { noremap = true })
 

@@ -25,6 +25,7 @@ vim.opt.winborder = "rounded"
 vim.g.netrw_liststyle = 4
 vim.g.netrw_sort_sequence = [[[/]$,*,\(\.bak\|\~\|\.o\|\.h\|\.hpp\|\.c\|\.cpp\|\.info\|\.swp\|\.obj\)[*@]\=$]]
 vim.opt.virtualedit = "all"
+vim.opt.scrollback = 1000000
 
 vim.opt.list = true
 
@@ -39,6 +40,7 @@ vim.pack.add({
     { src = "https://github.com/nvim-lua/plenary.nvim" },
     { src = "https://github.com/nvim-telescope/telescope.nvim" },
     { src = "https://github.com/nvim-telescope/telescope-fzf-native.nvim" }, --requires manually running make in plugin directory
+    { src = "https://github.com/nvim-telescope/telescope-ui-select.nvim" },
     { src = "https://github.com/hrsh7th/nvim-cmp" },
     { src = "https://github.com/hrsh7th/cmp-nvim-lsp" },
     { src = "https://github.com/hrsh7th/cmp-buffer" },
@@ -74,7 +76,7 @@ vim.filetype.add({
     },
 })
 
-local rainbow_delimiters = require 'rainbow-delimiters'
+local rainbow_delimiters = require('rainbow-delimiters')
 
 vim.g.rainbow_delimiters = {
     strategy = {
@@ -96,16 +98,21 @@ require("ibl").setup({
 
 require('telescope').setup({
     extensions = {
-        fzf = {
+        ["fzf"] = {
             fuzzy = true,
             override_generic_sorter = true,
             override_file_sorter = true,
             case_mode = "smart_case",
-        }
+        },
+        ["ui-select"] = {
+            require("telescope.themes").get_dropdown({}),
+        },
     }
 })
 
-require('telescope').load_extension('fzf')
+require('telescope').load_extension("fzf")
+
+require("telescope").load_extension("ui-select")
 
 vim.lsp.enable({
     "clangd",
@@ -139,6 +146,8 @@ vim.g.mapleader = " "
 
 vim.keymap.set("n", "<Esc>", "a", { noremap = true })
 
+vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true })
+
 vim.keymap.set({ "n", "v" }, "<Up>", "gk", { noremap = true })
 
 vim.keymap.set({ "n", "v" }, "<Down>", "gj", { noremap = true })
@@ -151,34 +160,19 @@ vim.keymap.set("v", "<A-Down>", ":m '>+1<CR>gv=gv", { noremap = true, silent = t
 
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
 
-vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
-
-vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
-
-vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
-
---vim.keymap.set("n", "<leader>o", ":update<CR> :source<CR>", { noremap = true })
-
-vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { noremap = true })
-
-vim.keymap.set("n", "<leader>i", function()
-    local enabled = vim.lsp.inlay_hint.is_enabled()
-    vim.lsp.inlay_hint.enable(not enabled)
+vim.keymap.set("n", "<leader>d", function()
+    vim.cmd("terminal ./build_debug.sh")
 end, { noremap = true })
 
-vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { noremap = true })
+vim.keymap.set("n", "<leader>r", function()
+    vim.cmd("terminal ./build_release.sh")
+end, { noremap = true })
 
-vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+vim.keymap.set("n", "<leader>c", function()
+    vim.cmd("terminal ./debug_core_file.sh")
+end, { noremap = true })
 
-vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
-
---vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
-vim.keymap.set("n", "<leader>+", vim.lsp.buf.code_action, { noremap = true })
-
-vim.keymap.set("n", "<leader>g", require("telescope.builtin").lsp_document_symbols,
-    { desc = "Find Symbols", noremap = true })
-
-vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
 
 vim.keymap.set("n", "<leader>z", function()
     if vim.bo.buftype ~= "terminal" then
@@ -196,26 +190,60 @@ vim.keymap.set("n", "<leader>z", function()
     end
 end)
 
+vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
+
+vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
+
+vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+
+vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+
+vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { noremap = true })
+
+vim.keymap.set("n", "<leader>i", function()
+    local enabled = vim.lsp.inlay_hint.is_enabled()
+    vim.lsp.inlay_hint.enable(not enabled)
+end, { noremap = true })
+
+vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
+
+--vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
+
 vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
+
+vim.keymap.set("n", "<leader>S", require("telescope.builtin").lsp_workspace_symbols, { noremap = true })
 
 vim.keymap.set("n", "<leader>s", function()
     require("telescope.builtin").find_files({
         hidden = true,
-        --no_ignore = true,
     })
 end, { desc = "Search Files", noremap = true })
 
-vim.keymap.set("n", "<leader>d", function()
-    vim.cmd("terminal ./build_debug.sh")
-end, { noremap = true })
+vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 
-vim.keymap.set("n", "<leader>r", function()
-    vim.cmd("terminal ./build_release.sh")
-end, { noremap = true })
+vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { noremap = true })
 
-vim.keymap.set("n", "<leader>c", function()
-    vim.cmd("terminal ./debug_core_file.sh")
-end, { noremap = true })
+vim.keymap.set('n', '<CR>', function()
+    vim.ui.select(
+        {
+            { "Go to Definition",      vim.lsp.buf.definition },
+            { "Go to Declaration",     vim.lsp.buf.declaration },
+            { "Go to Type Definition", vim.lsp.buf.type_definition },
+            { "Go to Implementation",  vim.lsp.buf.implementation },
+            { "Find References",       function() require('telescope.builtin').lsp_references({ include_declaration = true }) end },
+            { "Rename Symbol",         vim.lsp.buf.rename },
+            { "Code Action",           vim.lsp.buf.code_action },
+            { "Incoming Calls",        vim.lsp.buf.incoming_calls },
+            { "Outgoing Calls",        vim.lsp.buf.outgoing_calls },
+            { "Signature Help",        vim.lsp.buf.signature_help },
+        },
+        {
+            prompt = "LSP Symbol Actions",
+            format_item = function(item) return item[1] end,
+        },
+        function(choice) if choice then choice[2]() end end
+    )
+end, { silent = true, noremap = true })
 
 vim.keymap.set("n", "<leader>lll", function()
     local path = vim.fn.getcwd() .. "/LICENSE.md"
@@ -233,26 +261,6 @@ vim.keymap.set("n", "<leader>lll", function()
     vim.api.nvim_put(output, "c", false, true)
 end, { noremap = true, silent = true, desc = "Paste custom text" })
 
-vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { noremap = true })
-
-vim.keymap.set('n', '<CR>', function()
-    require('telescope.builtin').lsp_references({
-        include_declaration = true,
-    })
-end, { buffer = bufnr, silent = true, noremap = true })
-
-vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
-
 vim.cmd("colorscheme vscode")
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
-
---[[vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(ev)
-        local client = vim.lsp.get_client_by_id(ev.data.client_id)
-        if client:supports_method("textDocument/completion") then
-            vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
-        end
-    end
-})
-vim.cmd("set completeopt+=noselect")]]

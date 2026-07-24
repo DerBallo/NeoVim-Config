@@ -96,7 +96,47 @@ require("ibl").setup({
     },
 })
 
+local telescopeActions = require("telescope.actions")
+local telescopeActionState = require("telescope.actions.state")
+
+local function scrollResultsNext(prompt_bufnr)
+    telescopeActionState.get_current_picker(prompt_bufnr).previewer:scroll_fn(1)
+end
+
+local function scrollResultsPrevious(prompt_bufnr)
+    telescopeActionState.get_current_picker(prompt_bufnr).previewer:scroll_fn(-1)
+end
+
 require('telescope').setup({
+    defaults = {
+        layout_strategy = "vertical",
+        layout_config = {
+            vertical = {
+                width = 0.9,
+                height = 0.9,
+                preview_height = 0.5,
+                prompt_position = "bottom",
+                mirror = false,
+            },
+        },
+        --scroll_strategy = "limit",
+        mappings = {
+            i = {
+                ["<S-Up>"] = telescopeActions.results_scrolling_up,
+                ["<S-Down>"] = telescopeActions.results_scrolling_down,
+
+                ["<C-Up>"] = scrollResultsPrevious,
+                ["<C-Down>"] = scrollResultsNext,
+            },
+            n = {
+                ["<S-Up>"] = telescopeActions.results_scrolling_up,
+                ["<S-Down>"] = telescopeActions.results_scrolling_down,
+
+                ["<C-Up>"] = scrollResultsPrevious,
+                ["<C-Down>"] = scrollResultsNext,
+            },
+        },
+    },
     extensions = {
         ["fzf"] = {
             fuzzy = true,
@@ -107,7 +147,7 @@ require('telescope').setup({
         ["ui-select"] = {
             require("telescope.themes").get_dropdown({}),
         },
-    }
+    },
 })
 
 require('telescope').load_extension("fzf")
@@ -160,19 +200,26 @@ vim.keymap.set("v", "<A-Down>", ":m '>+1<CR>gv=gv", { noremap = true, silent = t
 
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
 
-vim.keymap.set("n", "<leader>d", function()
-    vim.cmd("terminal ./build_debug.sh")
-end, { noremap = true })
+vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
 
 vim.keymap.set("n", "<leader>r", function()
-    vim.cmd("terminal ./build_release.sh")
+    local root = vim.fn.getcwd()
+    local scripts = {}
+    for _, pattern in ipairs({ "*.sh", "*.bat" }) do
+        local matches = vim.fn.globpath(root, pattern, false, true)
+        table.move(matches, 1, #matches, #scripts + 1, scripts)
+    end
+    vim.ui.select(
+        scripts,
+        {
+            prompt = "Run Script",
+            format_item = function(path)
+                return path
+            end,
+        },
+        function(choice) if choice then vim.cmd("terminal" .. choice) end end
+    )
 end, { noremap = true })
-
-vim.keymap.set("n", "<leader>c", function()
-    vim.cmd("terminal ./debug_core_file.sh")
-end, { noremap = true })
-
-vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
 
 vim.keymap.set("n", "<leader>z", function()
     if vim.bo.buftype ~= "terminal" then
@@ -226,13 +273,24 @@ vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { nor
 vim.keymap.set('n', '<CR>', function()
     vim.ui.select(
         {
+            { "Code Actions",          vim.lsp.buf.code_action },
+            { "Definitions", function()
+                require('telescope.builtin').lsp_definitions({
+                    jump_type = "never",
+                })
+            end, },
+            { "References", function()
+                require('telescope.builtin').lsp_references({
+                    include_declaration = true,
+                    include_current_line = true,
+                    jump_type = "never",
+                })
+            end },
+            { "Rename",                vim.lsp.buf.rename },
             { "Go to Definition",      vim.lsp.buf.definition },
             { "Go to Declaration",     vim.lsp.buf.declaration },
             { "Go to Type Definition", vim.lsp.buf.type_definition },
             { "Go to Implementation",  vim.lsp.buf.implementation },
-            { "Find References",       function() require('telescope.builtin').lsp_references({ include_declaration = true }) end },
-            { "Rename Symbol",         vim.lsp.buf.rename },
-            { "Code Action",           vim.lsp.buf.code_action },
             { "Incoming Calls",        vim.lsp.buf.incoming_calls },
             { "Outgoing Calls",        vim.lsp.buf.outgoing_calls },
             { "Signature Help",        vim.lsp.buf.signature_help },

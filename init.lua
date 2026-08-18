@@ -9,6 +9,7 @@ vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.wrap = true
+vim.opt.linebreak = true
 vim.opt.swapfile = false
 vim.opt.backup = false
 vim.opt.undodir = os.getenv("HOME") .. "/.undodir"
@@ -109,12 +110,12 @@ end
 
 require('telescope').setup({
     defaults = {
-        layout_strategy = "vertical",
+        layout_strategy = "horizontal",
         layout_config = {
-            vertical = {
+            horizontal = {
                 width = 0.9,
                 height = 0.9,
-                preview_height = 0.5,
+                preview_width = 0.4,
                 prompt_position = "bottom",
                 mirror = false,
             },
@@ -148,6 +149,14 @@ require('telescope').setup({
             require("telescope.themes").get_dropdown({}),
         },
     },
+})
+
+vim.api.nvim_create_autocmd("User", {
+    pattern = "TelescopePreviewerLoaded",
+    callback = function()
+        vim.wo.wrap = true
+        vim.wo.linebreak = true
+    end,
 })
 
 require('telescope').load_extension("fzf")

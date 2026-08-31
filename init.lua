@@ -47,6 +47,7 @@ vim.pack.add({
     { src = "https://github.com/hrsh7th/cmp-buffer" },
     { src = "https://github.com/hrsh7th/cmp-path" },
     { src = "https://github.com/L3MON4D3/LuaSnip" },
+    { src = "https://github.com/saadparwaiz1/cmp_luasnip" },
     { src = "https://github.com/HiPhish/rainbow-delimiters.nvim" },
     { src = "https://github.com/lukas-reineke/indent-blankline.nvim" },
 })
@@ -64,17 +65,6 @@ vim.api.nvim_create_autocmd("FileType", {
     callback = function()
         vim.treesitter.start()
     end,
-})
-
-vim.filetype.add({
-    extension = {
-        hxx = "cpp",
-        ipp = "cpp",
-        tpp = "cpp",
-        inl = "cpp",
-        inc = "cpp",
-        def = "cpp",
-    },
 })
 
 local rainbow_delimiters = require('rainbow-delimiters')
@@ -175,20 +165,30 @@ vim.lsp.enable({
     "glsl_analyzer"
 })
 
+local luasnip = require("luasnip")
+luasnip.add_snippets("cpp", dofile(vim.fn.stdpath("config") .. "/snippets/cpp.lua"))
+
 local cmp = require("cmp")
 cmp.setup({
+    snippet = {
+        expand = function(args)
+            luasnip.lsp_expand(args.body)
+        end,
+    },
+
     mapping = cmp.mapping.preset.insert({
         ["<C-Space>"] = cmp.mapping.complete(),
-        ["<Tab>"] = cmp.mapping.confirm({ select = true }),
         ["<Down>"] = cmp.mapping.select_next_item(),
         ["<Up>"] = cmp.mapping.select_prev_item(),
+        ["<CR>"] = cmp.mapping.confirm({ select = true }),
     }),
 
-    sources = {
-        { name = "nvim_lsp" },
-        { name = "buffer" },
-        { name = "path" },
-    },
+    sources = cmp.config.sources({
+        { name = "path",     priority = 1000 },
+        { name = "luasnip",  priority = 750 },
+        { name = "nvim_lsp", priority = 500 },
+        { name = "buffer",   priority = 250 },
+    }),
 })
 
 vim.g.mapleader = " "
@@ -206,6 +206,22 @@ vim.keymap.set("n", "<A-Down>", ":m .+1<CR>==", { noremap = true, silent = true 
 
 vim.keymap.set("v", "<A-Up>", ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
 vim.keymap.set("v", "<A-Down>", ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
+
+vim.keymap.set({ "i", "s" }, "<Tab>", function()
+    if luasnip.jumpable(1) then
+        luasnip.jump(1)
+        return ""
+    end
+    return "<Tab>"
+end, { expr = true, silent = true })
+
+vim.keymap.set({ "i", "s" }, "<S-Tab>", function()
+    if luasnip.jumpable(-1) then
+        luasnip.jump(-1)
+        return ""
+    end
+    return "<S-Tab>"
+end, { expr = true, silent = true })
 
 vim.keymap.set("n", "<leader>e", ":Ex<CR>", { noremap = true })
 
@@ -246,13 +262,55 @@ vim.keymap.set("n", "<leader>z", function()
     end
 end)
 
-vim.keymap.set("n", "<leader>w", ":write<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>w", ":wa<CR>", { noremap = true })
 
-vim.keymap.set("n", "<leader>q", ":quit<CR>", { noremap = true })
+vim.keymap.set("n", "<leader>q", ":q<CR>", { noremap = true })
 
-vim.keymap.set("n", "<leader>b", require("telescope.builtin").buffers, { desc = "Find Buffers", noremap = true })
+vim.keymap.set("n", "<leader>b", function()
+    local buffers = vim.tbl_filter(function(buf)
+        return vim.api.nvim_buf_is_valid(buf)
+            and vim.api.nvim_buf_is_loaded(buf)
+    end, vim.api.nvim_list_bufs())
+
+    local items = vim.tbl_map(function(buf)
+        return {
+            buf = buf,
+            name = vim.api.nvim_buf_get_name(buf),
+        }
+    end, buffers)
+
+    vim.ui.select(items, {
+        prompt = "Buffer:",
+        format_item = function(item)
+            return item.name ~= "" and item.name or "[No Name]"
+        end,
+    }, function(item)
+        if not item then
+            return
+        end
+
+        vim.ui.select({ "Open", "Delete" }, {
+            prompt = "Action:",
+        }, function(action)
+            if action == "Open" then
+                vim.api.nvim_set_current_buf(item.buf)
+            elseif action == "Delete" then
+                vim.api.nvim_buf_delete(item.buf, {})
+            end
+        end)
+    end)
+end, { desc = "Buffer menu" })
 
 vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+
+vim.keymap.set("n", "<leader>l", function()
+    local file = vim.fn.fnamemodify(vim.fn.expand("%:p"), ":.")
+    local line = vim.fn.line(".")
+    local text = string.format("%s:%d", file, line)
+
+    vim.fn.setreg("+", text)
+    vim.notify("Copied current location")
+end, { noremap = true })
 
 vim.keymap.set("n", "<leader>f", vim.lsp.buf.format, { noremap = true })
 
@@ -263,17 +321,20 @@ end, { noremap = true })
 
 vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
 
---vim.keymap.set("n", "<C-x>", vim.lsp.buf.signature_help)
-
-vim.keymap.set("n", "<leader>m", require("telescope.builtin").live_grep, { desc = "Search in Buffers", noremap = true })
-
-vim.keymap.set("n", "<leader>S", require("telescope.builtin").lsp_workspace_symbols, { noremap = true })
-
-vim.keymap.set("n", "<leader>s", function()
-    require("telescope.builtin").find_files({
-        hidden = true,
-    })
-end, { desc = "Search Files", noremap = true })
+vim.keymap.set('n', '<leader>s', function()
+    vim.ui.select(
+        {
+            { "Files",   function() require("telescope.builtin").find_files({ hidden = true, }) end },
+            { "Grep",    require("telescope.builtin").live_grep },
+            { "Symbols", require("telescope.builtin").lsp_dynamic_workspace_symbols },
+        },
+        {
+            prompt = "Search Actions",
+            format_item = function(item) return item[1] end,
+        },
+        function(choice) if choice then choice[2]() end end
+    )
+end, { silent = true, noremap = true })
 
 vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 

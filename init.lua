@@ -150,8 +150,8 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 require('telescope').load_extension("fzf")
-
 require("telescope").load_extension("ui-select")
+local telescopeBuiltin = require("telescope.builtin")
 
 vim.lsp.enable({
     "clangd",
@@ -324,9 +324,39 @@ vim.keymap.set("n", "<Tab>", vim.lsp.buf.hover, { noremap = true })
 vim.keymap.set('n', '<leader>s', function()
     vim.ui.select(
         {
-            { "Files",   function() require("telescope.builtin").find_files({ hidden = true, }) end },
-            { "Grep",    require("telescope.builtin").live_grep },
-            { "Symbols", require("telescope.builtin").lsp_dynamic_workspace_symbols },
+            { "Files",                 function() telescopeBuiltin.find_files({ hidden = true, follow = true }) end },
+            { "Grep",                  function() telescopeBuiltin.live_grep({ hidden = true, follow = true }) end },
+            { "Grep Current Buffer",   function() telescopeBuiltin.current_buffer_fuzzy_find({ case_mode = "smart_case" }) end },
+            { "Recent Files",          function() telescopeBuiltin.oldfiles({ cwd_only = true }) end },
+
+            { "LSP Symbols",           telescopeBuiltin.lsp_document_symbols },
+            { "LSP Workspace Symbols", telescopeBuiltin.lsp_dynamic_workspace_symbols },
+
+            { "Git Files",             function() telescopeBuiltin.git_files({ show_untracked = true }) end },
+            { "Git Commits",           telescopeBuiltin.git_commits },
+            { "Git BCommits",          telescopeBuiltin.git_bcommits },
+            { "Git Status",            telescopeBuiltin.git_status },
+            { "Git Branches",          telescopeBuiltin.git_branches },
+
+            { "Diagnostics",           function() telescopeBuiltin.diagnostics({ bufnr = 0 }) end },
+            { "Workspace Diagnostics", telescopeBuiltin.diagnostics },
+            { "Quickfix",              telescopeBuiltin.quickfix },
+            { "Location List",         telescopeBuiltin.loclist },
+
+            { "Keymaps",               telescopeBuiltin.keymaps },
+            { "Commands",              telescopeBuiltin.commands },
+            { "Help",                  telescopeBuiltin.help_tags },
+            { "Man Pages",             telescopeBuiltin.man_pages },
+            { "Colorschemes",          telescopeBuiltin.colorscheme },
+            { "Marks",                 telescopeBuiltin.marks },
+            { "Jumplist",              telescopeBuiltin.jumplist },
+            { "Registers",             telescopeBuiltin.registers },
+            { "Autocommands",          telescopeBuiltin.autocommands },
+            { "Options",               telescopeBuiltin.vim_options },
+
+            { "Treesitter Symbols",    telescopeBuiltin.treesitter },
+            { "Resume Last Telescope", telescopeBuiltin.resume },
+            { "Pickers",               telescopeBuiltin.builtin },
         },
         {
             prompt = "Search Actions",
@@ -334,23 +364,23 @@ vim.keymap.set('n', '<leader>s', function()
         },
         function(choice) if choice then choice[2]() end end
     )
-end, { silent = true, noremap = true })
+end, { noremap = true })
 
 vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 
-vim.keymap.set('n', '<leader>o', require('telescope.builtin').diagnostics, { noremap = true })
+vim.keymap.set('n', '<leader>o', telescopeBuiltin.diagnostics, { noremap = true })
 
 vim.keymap.set('n', '<CR>', function()
     vim.ui.select(
         {
             { "Code Actions",          vim.lsp.buf.code_action },
             { "Definitions", function()
-                require('telescope.builtin').lsp_definitions({
+                telescopeBuiltin.lsp_definitions({
                     jump_type = "never",
                 })
             end, },
             { "References", function()
-                require('telescope.builtin').lsp_references({
+                telescopeBuiltin.lsp_references({
                     include_declaration = true,
                     include_current_line = true,
                     jump_type = "never",

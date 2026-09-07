@@ -118,6 +118,9 @@ require('telescope').setup({
 
                 ["<C-Up>"] = scrollResultsPrevious,
                 ["<C-Down>"] = scrollResultsNext,
+
+                ["<C-S-Up>"] = telescopeActions.preview_scrolling_up,
+                ["<C-S-Down>"] = telescopeActions.preview_scrolling_down,
             },
             n = {
                 ["<S-Up>"] = telescopeActions.results_scrolling_up,
@@ -125,6 +128,9 @@ require('telescope').setup({
 
                 ["<C-Up>"] = scrollResultsPrevious,
                 ["<C-Down>"] = scrollResultsNext,
+
+                ["<C-S-Up>"] = telescopeActions.preview_scrolling_up,
+                ["<C-S-Down>"] = telescopeActions.preview_scrolling_down,
             },
         },
     },

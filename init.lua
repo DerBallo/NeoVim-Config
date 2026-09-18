@@ -236,7 +236,7 @@ vim.keymap.set("n", "<leader>t", ":terminal<CR>", { noremap = true })
 vim.keymap.set("n", "<leader>r", function()
     local root = vim.fn.getcwd()
     local scripts = {}
-    for _, pattern in ipairs({ "*.sh", "*.bat" }) do
+    for _, pattern in ipairs({ "**/*.sh", "**/*.bat" }) do
         local matches = vim.fn.globpath(root, pattern, false, true)
         table.move(matches, 1, #matches, #scripts + 1, scripts)
     end

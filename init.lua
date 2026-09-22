@@ -83,7 +83,7 @@ require("ibl").setup({
         char = "┆",
     },
     scope = {
-        enabled = true,
+        enabled = false,
     },
 })
 
@@ -191,7 +191,7 @@ cmp.setup({
 
     sources = cmp.config.sources({
         { name = "path",     priority = 1000 },
-        { name = "luasnip",  priority = 750 },
+        { name = "luasnip",  priority = 500 },
         { name = "nvim_lsp", priority = 500 },
         { name = "buffer",   priority = 250 },
     }),

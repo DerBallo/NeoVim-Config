@@ -181,18 +181,16 @@ cmp.setup({
             luasnip.lsp_expand(args.body)
         end,
     },
-
     mapping = cmp.mapping.preset.insert({
         ["<C-Space>"] = cmp.mapping.complete(),
         ["<Down>"] = cmp.mapping.select_next_item(),
         ["<Up>"] = cmp.mapping.select_prev_item(),
         ["<CR>"] = cmp.mapping.confirm({ select = true }),
     }),
-
     sources = cmp.config.sources({
         { name = "path",     priority = 1000 },
+        { name = "nvim_lsp", priority = 750 },
         { name = "luasnip",  priority = 500 },
-        { name = "nvim_lsp", priority = 500 },
         { name = "buffer",   priority = 250 },
     }),
 })

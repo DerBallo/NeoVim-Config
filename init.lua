@@ -27,6 +27,7 @@ vim.g.netrw_liststyle = 4
 vim.g.netrw_sort_sequence = [[[/]$,*,\(\.bak\|\~\|\.o\|\.h\|\.hpp\|\.c\|\.cpp\|\.info\|\.swp\|\.obj\)[*@]\=$]]
 vim.opt.virtualedit = "all"
 vim.opt.scrollback = 1000000
+vim.opt.clipboard = "unnamedplus"
 
 vim.opt.list = true
 
@@ -303,9 +304,84 @@ vim.keymap.set("n", "<leader>b", function()
             end
         end)
     end)
-end, { desc = "Buffer menu" })
+end, { noremap = true })
 
-vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
+vim.keymap.set("n", "<leader>p", function()
+    local path = vim.fn.expand("~/.cache/xfce4/clipman/textsrc")
+
+    local file = io.open(path, "r")
+    if not file then
+        vim.notify("Clipman history not found", vim.log.levels.ERROR)
+        return
+    end
+
+    file:read("*l")
+    local content = file:read("*a")
+    file:close()
+
+    local entries = {}
+    local current = {}
+    local i = 1
+
+    while i <= #content do
+        local char = content:sub(i, i)
+
+        if char == "\\" and i < #content then
+            table.insert(current, char)
+            i = i + 1
+            table.insert(current, content:sub(i, i))
+        elseif char == ";" then
+            table.insert(entries, table.concat(current))
+            current = {}
+        else
+            table.insert(current, char)
+        end
+
+        i = i + 1
+    end
+
+    if #current > 0 then
+        table.insert(entries, table.concat(current))
+    end
+
+    local reversed = {}
+    for n = #entries, 1, -1 do
+        table.insert(reversed, entries[n])
+    end
+    entries = reversed
+
+    local function unescape(s)
+        return (s:gsub("\\(.)", function(char)
+            local escapes = {
+                ["n"] = "\n",
+                ["s"] = " ",
+                ["r"] = "\r",
+                ["t"] = "\t",
+                ["\\"] = "\\",
+                [";"] = ";",
+            }
+
+            return escapes[char] or char
+        end))
+    end
+
+    for n, entry in ipairs(entries) do
+        entries[n] = unescape(entry)
+    end
+
+    vim.ui.select(entries, {
+        prompt = "Clipboard history:",
+    }, function(choice)
+        if choice then
+            vim.api.nvim_put(
+                vim.split(choice, "\n", { plain = true }),
+                "c",
+                true,
+                true
+            )
+        end
+    end)
+end, { desc = "Buffer menu" })
 
 vim.keymap.set("n", "<leader>l", function()
     local file = vim.fn.fnamemodify(vim.fn.expand("%:p"), ":.")

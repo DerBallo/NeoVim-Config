@@ -27,7 +27,7 @@ vim.g.netrw_liststyle = 4
 vim.g.netrw_sort_sequence = [[[/]$,*,\(\.bak\|\~\|\.o\|\.h\|\.hpp\|\.c\|\.cpp\|\.info\|\.swp\|\.obj\)[*@]\=$]]
 vim.opt.virtualedit = "all"
 vim.opt.scrollback = 1000000
-vim.opt.clipboard = "unnamedplus"
+--vim.opt.clipboard = "unnamedplus"
 
 vim.opt.list = true
 
@@ -305,6 +305,8 @@ vim.keymap.set("n", "<leader>b", function()
         end)
     end)
 end, { noremap = true })
+
+vim.keymap.set({ "n", "v", "x" }, "<leader>y", '"+y<CR>', { noremap = true })
 
 vim.keymap.set("n", "<leader>p", function()
     local path = vim.fn.expand("~/.cache/xfce4/clipman/textsrc")

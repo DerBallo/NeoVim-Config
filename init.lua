@@ -448,6 +448,127 @@ vim.keymap.set('n', '<leader>s', function()
     )
 end, { noremap = true })
 
+vim.keymap.set("n", "<leader>m", function()
+    local pickers = require("telescope.pickers")
+    local finders = require("telescope.finders")
+    local previewers = require("telescope.previewers")
+    local conf = require("telescope.config").values
+    local actions = require("telescope.actions")
+    local action_state = require("telescope.actions.state")
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local markers = {}
+
+    for i, line in ipairs(lines) do
+        local start_pos, end_pos = line:find("MARKER", 1, true)
+
+        if start_pos then
+            local name = line:sub(end_pos + 1)
+                :gsub("^%s*[:%-]?%s*", "")
+                :gsub("%s*%*/%s*$", "")
+                :gsub("%s*%-%->%s*$", "")
+
+            name = vim.trim(name)
+
+            if name == "" then
+                name = "MARKER"
+            end
+
+            table.insert(markers, {
+                name = name,
+                lnum = i,
+            })
+        end
+    end
+
+    if #markers == 0 then
+        vim.notify("No markers found", vim.log.levels.INFO)
+        return
+    end
+
+    local preview_generation = 0
+
+    pickers.new({}, {
+        prompt_title = "Buffer Markers",
+
+        finder = finders.new_table({
+            results = markers,
+            entry_maker = function(entry)
+                return {
+                    value = entry,
+                    display = string.format("%4d  %s", entry.lnum, entry.name),
+                    ordinal = entry.name,
+                    lnum = entry.lnum,
+                }
+            end,
+        }),
+
+        sorter = conf.generic_sorter({}),
+
+        previewer = previewers.new_buffer_previewer({
+            define_preview = function(self, entry)
+                preview_generation = preview_generation + 1
+                local generation = preview_generation
+
+                local pbuf = self.state.bufnr
+
+                vim.api.nvim_buf_set_lines(pbuf, 0, -1, false, lines)
+                vim.bo[pbuf].filetype = vim.bo[bufnr].filetype
+
+                vim.api.nvim_buf_clear_namespace(pbuf, -1, 0, -1)
+
+                vim.api.nvim_buf_add_highlight(
+                    pbuf,
+                    -1,
+                    "TelescopePreviewMatch",
+                    entry.lnum - 1,
+                    0,
+                    -1
+                )
+
+                vim.schedule(function()
+                    if generation ~= preview_generation then
+                        return
+                    end
+
+                    local win = self.state.winid
+
+                    if not win or not vim.api.nvim_win_is_valid(win) then
+                        return
+                    end
+
+                    if vim.api.nvim_win_get_buf(win) ~= pbuf then
+                        return
+                    end
+
+                    local count = vim.api.nvim_buf_line_count(pbuf)
+                    local target = math.max(1, math.min(entry.lnum, count))
+
+                    vim.api.nvim_win_set_cursor(win, { target, 0 })
+                end)
+            end,
+        }),
+
+        attach_mappings = function(prompt_bufnr)
+            actions.select_default:replace(function()
+                local selection = action_state.get_selected_entry()
+                actions.close(prompt_bufnr)
+
+                if selection then
+                    vim.api.nvim_win_set_cursor(
+                        0,
+                        { selection.lnum, 0 }
+                    )
+                    vim.cmd("normal! zz")
+                end
+            end)
+
+            return true
+        end,
+    }):find()
+end, { noremap = true, silent = true })
+
 vim.keymap.set('n', '<leader><space>', vim.diagnostic.open_float, { noremap = true })
 
 vim.keymap.set('n', '<leader>o', telescopeBuiltin.diagnostics, { noremap = true })
@@ -483,7 +604,7 @@ vim.keymap.set('n', '<CR>', function()
         },
         function(choice) if choice then choice[2]() end end
     )
-end, { silent = true, noremap = true })
+end, { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>lll", function()
     local path = vim.fn.getcwd() .. "/LICENSE.md"
